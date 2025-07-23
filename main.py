@@ -182,10 +182,40 @@ def convert_json_to_html(json_data: dict) -> str:
     items: list = json_data["sidebar"]["containers"][target]["items"]
 
     bookmarks: dict = convert_to_bookmarks(spaces, items)
+    bookmarks["bookmarks"] = get_bookmarks_to_process(bookmarks)
     html_content: str = convert_bookmarks_to_html(bookmarks)
 
     return html_content
 
+def get_bookmarks_to_process(bookmarks: dict) -> list:
+    # List non-nested bookmarks by title (those at the top level of each space folder)
+    non_nested_titles = [folder.get("title", "") for folder in bookmarks["bookmarks"]]
+    if non_nested_titles:
+        print("Current spaces:")
+        for idx, title in enumerate(non_nested_titles, start=1):
+            print(f"{idx}. {title}")
+    else:
+        logging.info("No non-nested bookmarks found at the top level.")
+        return bookmarks["bookmarks"]
+    # Allow user to choose which space to process
+    if non_nested_titles:
+        while True:
+            try:
+                selected = input("Enter the number of the space to process (or press Enter to process all): ").strip()
+                if not selected:
+                    selected_indices = list(range(len(non_nested_titles)))
+                    break
+                selected_index = int(selected) - 1
+                if 0 <= selected_index < len(non_nested_titles):
+                    selected_indices = [selected_index]
+                    break
+                else:
+                    print(f"Please enter a number between 1 and {len(non_nested_titles)}.")
+            except ValueError:
+                print("Invalid input. Please enter a valid number or press Enter.")
+        # Return only the selected spaces (folders)
+        return [bookmarks["bookmarks"][i] for i in selected_indices]
+    return bookmarks["bookmarks"]
 
 def get_spaces(spaces: list) -> dict:
     logging.info("Getting spaces...")
