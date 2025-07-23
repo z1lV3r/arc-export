@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import subprocess
+import html
 from datetime import datetime
 from pathlib import Path
 
@@ -305,13 +306,14 @@ def convert_bookmarks_to_html(bookmarks: dict) -> str:
     def traverse_dict(d: dict, html_str: str, level: int) -> str:
         indent: str = "\t" * level
         for item in d:
+            title = html.escape(item["title"])
             if item["type"] == "folder":
-                html_str += f'\n{indent}<DT><H3>{item["title"]}</H3>'
+                html_str += f'\n{indent}<DT><H3>{title}</H3>'
                 html_str += f"\n{indent}<DL><p>"
                 html_str = traverse_dict(item["children"], html_str, level + 1)
                 html_str += f"\n{indent}</DL><p>"
             elif item["type"] == "bookmark":
-                html_str += f'\n{indent}<DT><A HREF="{item["url"]}">{item["title"]}</A>'
+                html_str += f'\n{indent}<DT><A HREF="{item["url"]}">{title}</A>'
         return html_str
 
     html_str = traverse_dict(bookmarks["bookmarks"], html_str, 1)
